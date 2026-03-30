@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"> 
 <title>Knitout Visualizer</title>
+<script src="knitout-to-kcode.js"></script>
 </head>
 <style>
 code.knitout {
@@ -182,6 +183,7 @@ button:active, #fileLabel:active {
 <button id="reload">Reload</button>
 <button id="compile">Run/Show</button>
 <button id="save" onclick="saveKnitout();">Save Knitout</button>
+<button id="save" onclick="saveKCode();">Save KCode</button>
 <button id="save" onclick="saveJavascript();">Save Javascript</button>
 <label for="showKnitout"><input type="checkbox"  name="showKnitout" id="showKnitout" onchange="toggleKnitout()">Show Knitout</label>
 <span class="infoLink"><a href="https://github.com/textiles-lab/knitout-live-visualizer" target="_blank">github page</a>;</span>
@@ -196,14 +198,14 @@ button:active, #fileLabel:active {
 // (you can also just write raw knitout into this window)
 
 //parameters:
-const Carrier = "7";
+const Carrier = "3";
 
 //file header:
 console.log(";!knitout-2");
-console.log(";;Carriers: 1 2 3 4 5 6 7 8 9 10");
+console.log(";;Carriers: 1 2 3 4 5 6");
 
 //bring carrier into action using yarn inserting hook:
-console.log(`inhook ${Carrier}`);
+console.log(`in ${Carrier}`);
 
 //alternating tucks cast-on:
 for(let n = 3; n &gt;= 0; n -= 2) {
@@ -217,9 +219,6 @@ for(let n = 0; n &lt;= 3; n += 2) {
 for(let n = 3; n &gt;= 0; n -= 1) {
     console.log(`knit - f${n} ${Carrier}`);
 }
-
-//send out yarn inserting hook:
-console.log(`releasehook ${Carrier}`);
 
 //do some transfers to exercise the visualizer:
 //(you probably wouldn't do all these redundant moves in an actual knitting program)
@@ -246,7 +245,7 @@ for(let r = 0; r &lt; 2; r += 1){
 }
 
 //send out yarn carrier using yarn inserting hook:
-console.log(`outhook ${Carrier}`);
+console.log(`out ${3}`);
 
 //drop the loops:
 console.log(`drop b0`);
@@ -525,6 +524,78 @@ function updateKnitoutMode() {
 }
 
 editor.getSession().on('change', updateKnitoutMode);
+
+function saveKCode() {
+	updateKnitoutMode();
+
+	let code = editor.getValue();
+
+	if (code.indexOf("\r\n") !== -1) {
+		console.log("Converting dos line endings to unix-style (as required by knitout spec).");
+		code = code.replaceAll("\r\n", "\n");
+	}
+
+	if (isKnitout()) {
+		//mark up code with line numbers:
+		knitout = '';
+		code.split('\n').forEach(function(line, lineNumber){
+			knitout += line;
+			if (line.indexOf(';') === -1) {
+				knitout += ';!source:' + (lineNumber+1);
+			}
+			knitout += '\n';
+		});
+	} else {
+		knitout = evalJS(code);
+	}
+
+	convertKnitout(knitout);
+}
+
+function convertKnitout(text) {
+	filename="kcode-file.k"
+	//automatically add console logs to messages innerHTML
+	const real = {
+		log:console.log,
+		info:console.info,
+		warn:console.warn,
+		error:console.error,
+		assert:console.assert
+	}
+
+	console.assert = function () {
+		if (arguments[0]) {
+			//don't print anything, condition was true.
+		} else {
+			// [...arguments] converts to array so we can slice off the first (condition) argument:
+			console.log(...[...arguments].slice(1));
+		}
+		real.assert(...arguments); //also log to console
+	};
+	try {
+		//determine output filename:
+		let kcFile;
+		let i = filename.lastIndexOf('.');
+		if (i === -1) kcFile = filename + '.kc';
+		else kcFile = filename.substr(0,i) + '.kc';
+
+		//create kcode:
+		const {headers, passes} = knitoutToPasses(text, filename);
+		const kcode = passesToKCode(headers, passes, kcFile);
+
+		// setOutFile(kcFile, kcode);
+		console.info(`... done processing '${filename}'.`);
+		fileSave(kcode, "kcodeFile.kc");
+
+	} catch (e) {
+		// setOutFileError();
+		console.error(e);
+	}
+
+	for (const name of ['log', 'info', 'warn', 'error']) {
+		console[name] = real[name];
+	}
+}
 
 
 /*
