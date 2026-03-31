@@ -197,61 +197,24 @@ button:active, #fileLabel:active {
 <div id="editor-text">//this is javascript code that prints out knitout
 // (you can also just write raw knitout into this window)
 
-//parameters:
-const Carrier = "3";
+const knitout = require('knitout');
 
-//file header:
-console.log(";!knitout-2");
-console.log(";;Carriers: 1 2 3 4 5 6");
+// need this line for kniterate
+let k = new knitout.Writer({carriers:["1", "2", "3", "4", "5", "6"]});
 
-//bring carrier into action using yarn inserting hook:
-console.log(`in ${Carrier}`);
 
-//alternating tucks cast-on:
-for(let n = 3; n &gt;= 0; n -= 2) {
-    console.log(`tuck - f${n} ${Carrier}`);
-}
-for(let n = 0; n &lt;= 3; n += 2) {
-    console.log(`tuck + f${n} ${Carrier}`);
-}
+k.in("3");
 
-//row of plain knitting:
-for(let n = 3; n &gt;= 0; n -= 1) {
-    console.log(`knit - f${n} ${Carrier}`);
+for (let n = 10; n >= 0; n -= 2) k.tuck("-", "f" + n, "3");
+
+for (let n = 1; n <= 9; n += 2) k.tuck("+", "f" + n, "3");
+
+for (let r = 0; r < 10; ++r) {
+	for (let n = 10; n >= 0; --n) k.knit("-", "f" + n, "3");
+	for (let n = 0; n <= 10; ++n) k.knit("+", "f" + n, "3");
 }
 
-//do some transfers to exercise the visualizer:
-//(you probably wouldn't do all these redundant moves in an actual knitting program)
-
-console.log(`xfer f0 b0`);
-console.log(`xfer f1 bs1`);
-console.log(`xfer f2 b2`);
-console.log(`xfer f3 bs3`);
-
-console.log(`xfer b0 fs0`);
-console.log(`xfer bs1 f1`);
-console.log(`xfer b2 fs2`);
-console.log(`xfer bs3 f3`);
-
-console.log(`xfer fs0 b0`);
-console.log(`xfer fs2 b2`);
-
-//knit two rows of a tube:
-for(let r = 0; r &lt; 2; r += 1){
-    console.log(`knit + b0 ${Carrier}`);
-    console.log(`knit + b2 ${Carrier}`);
-    console.log(`knit - f3 ${Carrier}`);
-    console.log(`knit - f1 ${Carrier}`);
-}
-
-//send out yarn carrier using yarn inserting hook:
-console.log(`out ${3}`);
-
-//drop the loops:
-console.log(`drop b0`);
-console.log(`drop b2`);
-console.log(`drop f3`);
-console.log(`drop f1`);
+k.out("3");
 
 </div>
 </div>
