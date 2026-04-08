@@ -606,39 +606,40 @@ function convertKnitout(text) {
  }
  toggleKnitout();
 
- function toggleWaste() {
- 	console.log("toggling waste");
+function toggleWaste() {
+	console.log("toggling waste");
+	updateKnitoutMode();
+
+	let code = editor.getValue();
+
+	if (code.indexOf("\r\n") !== -1) {
+		console.log("Converting dos line endings to unix-style (as required by knitout spec).");
+		code = code.replaceAll("\r\n", "\n");
+	}
+
+	if (isKnitout()) {
+		//mark up code with line numbers:
+		knitout = '';
+		code.split('\n').forEach(function(line, lineNumber){
+			knitout += line;
+			if (line.indexOf(';') === -1) {
+				knitout += ';!source:' + (lineNumber+1);
+			}
+			knitout += '\n';
+		});
+	} else {
+		knitout = evalJS(code);
+	}
+
 	if (wasteCheckbox.checked) {
-		
-		updateKnitoutMode();
-
-		let code = editor.getValue();
-
-		if (code.indexOf("\r\n") !== -1) {
-			console.log("Converting dos line endings to unix-style (as required by knitout spec).");
-			code = code.replaceAll("\r\n", "\n");
-		}
-
-		if (isKnitout()) {
-			//mark up code with line numbers:
-			knitout = '';
-			code.split('\n').forEach(function(line, lineNumber){
-				knitout += line;
-				if (line.indexOf(';') === -1) {
-					knitout += ';!source:' + (lineNumber+1);
-				}
-				knitout += '\n';
-			});
-		} else {
-			knitout = evalJS(code);
-		}
-
 		knitout = addWasteSection(knitout);
 		show.showKnitout.parse(knitout, false, true);
 		console.log('add waste')
 
 	} else {
 		console.log('no waste')
+		show.showKnitout.parse(knitout, false, true);
+		console.log('add waste')
 	}
  }
 
