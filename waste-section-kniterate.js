@@ -477,7 +477,22 @@ function addWasteSection (file) {
 		}
 	}
 
-	lines = [...header, ...wasteSection, ...lines];
+	let xfers = [];
+
+	if (castonDir === "-"){
+		for (let n = minN; n <= maxN; ++n) {
+			xfers.push("xfer b"+n + " f"+n);
+		}
+	}
+
+	else {
+		for (let n = maxN; n >= minN; --n) {
+			xfers.push("xfer b" + n + " f"+n);
+		}
+	}
+
+	lines = [...header, ...wasteSection, ...xfers, ...lines];
+
 	lines = lines.join('\n');
 
 
