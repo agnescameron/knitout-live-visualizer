@@ -580,7 +580,8 @@ CellMachine.prototype.bringCarriers = function CellMachine_bringCarriers(d, n, c
 			crossTo = 'o' + d;
 			targetSide = d;
 		} else {
-			console.assert(Math.floor(this.racking) + 0.25 === this.racking, "Integer or quarter pitch only.");
+			// updated this to 0.5 for kniterate
+			console.assert(Math.floor(this.racking) + 0.5 === this.racking, "Integer or half pitch only.", this.racking);
 			//at quarter pitch, the bins line up a bit differently:
 			//       +|b0|-      +|b1|-
 			// +|f0|-      +|f1|-      +|
@@ -932,7 +933,7 @@ CellMachine.prototype.makeAfter = function CellMachine_makeAfter(d, n, cs, cells
 			frontN = 'f' + (needleIndex(n)/2 + Math.floor(this.racking));
 			crossFrom = 'o' + (d === '+' ? '-' : '+');
 			crossTo   = 'x' + (d === '+' ? '-' : '+');
-		} else { console.assert(Math.floor(this.racking)+0.25 === this.racking, "quarter pitch please");
+		} else { console.assert(Math.floor(this.racking)+0.5 === this.racking, "half pitch please");
 			//unaligned (e.g. quarter pitch) racking:
 			if (d === '+') {
 				frontN = 'f' + (needleIndex(n)/2 + Math.floor(this.racking) + 1);

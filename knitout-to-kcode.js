@@ -1033,8 +1033,7 @@ function knitoutToPasses(knitout, knitoutFile) {
 			if (expectNoCarriers && cs.length !== 0) {
 				throw "ERROR: cannot xfer with carriers (use split).";
 			}
-
-			console.log(n.needle, t.needle, racking)
+			
 			//make sure that 't' and 'n' align reasonably:
 			if (n.isBack() && t.isFront()) {
 				if (n.needle + racking !== t.needle) {
