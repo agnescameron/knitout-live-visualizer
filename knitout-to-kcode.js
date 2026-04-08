@@ -891,6 +891,7 @@ function knitoutToPasses(knitout, knitoutFile) {
 					n = carriers[c].last.needle;
 				}
 			});
+			// todo: take a look at this
 			let info = {
 				type:TYPE_SOFT_MISS,
 				slots:{},

@@ -4,6 +4,7 @@
 <meta charset="UTF-8"> 
 <title>Knitout Visualizer</title>
 <script src="knitout-to-kcode.js"></script>
+<script src="waste-section-kniterate.js"></script>
 </head>
 <style>
 code.knitout {
@@ -186,6 +187,7 @@ button:active, #fileLabel:active {
 <button id="save" onclick="saveKCode();">Save KCode</button>
 <button id="save" onclick="saveJavascript();">Save Javascript</button>
 <label for="showKnitout"><input type="checkbox"  name="showKnitout" id="showKnitout" onchange="toggleKnitout()">Show Knitout</label>
+<label for="wasteCheckbox"><input type="checkbox"  name="addWaste" id="wasteCheckbox" onchange="toggleWaste()">Add Waste Section</label>
 <span class="infoLink"><a href="https://github.com/textiles-lab/knitout-live-visualizer" target="_blank">github page</a>;</span>
 <span class="infoLink"><a href="https://github.com/textiles-lab/knitout-live-visualizer/issues" target="_blank">report a bug</a></span>
 </div>
@@ -202,16 +204,18 @@ const knitout = require('knitout');
 // need this line for kniterate
 let k = new knitout.Writer({carriers:["1", "2", "3", "4", "5", "6"]});
 
+// sample width = max_needle - min_needle
+// sample width should be >20!
+
+let min_needle = 50;
+let max_needle = 100;
+let rows = 20;
 
 k.in("3");
 
-for (let n = 10; n >= 0; n -= 2) k.tuck("-", "f" + n, "3");
-
-for (let n = 1; n <= 9; n += 2) k.tuck("+", "f" + n, "3");
-
-for (let r = 0; r < 10; ++r) {
-	for (let n = 10; n >= 0; --n) k.knit("-", "f" + n, "3");
-	for (let n = 0; n <= 10; ++n) k.knit("+", "f" + n, "3");
+for (let r = 0; r < rows; ++r) {
+	for (let n = max_needle; n >= min_needle; --n) k.knit("-", "f" + n, "3");
+	for (let n = min_needle; n <= max_needle; ++n) k.knit("+", "f" + n, "3");
 }
 
 k.out("3");
@@ -302,6 +306,12 @@ document.getElementById("resetZoom").onclick = function (evt) {
 }
 
 let knitout;
+ const code = document.getElementById("code1");
+ const codeWrapper = document.getElementById("codeWrapper");
+ const knitoutCheckbox = document.getElementById("showKnitout");
+ const wasteCheckbox = document.getElementById("wasteCheckbox");
+
+
 function updateVisualizer(centerView) {
 	updateKnitoutMode();
 
@@ -560,42 +570,6 @@ function convertKnitout(text) {
 	}
 }
 
-
-/*
-var dropTarget = document.getElementById("dropTarget");
-//dragging into the window also loads files:
-dropTarget.addEventListener('dragover', function(evt){
-	dropTarget.classList.add("active");
-	evt.preventDefault();
-	return false;
-});
-dropTarget.addEventListener('dragleave', function(evt){
-	dropTarget.classList.remove("active");
-	evt.preventDefault();
-	return false;
-});
-dropTarget.addEventListener('drop', function(evt){
-	dropTarget.classList.remove("active");
-	try {
-		readFile(evt.dataTransfer.files[0]);
-	} catch (e) {
-		console.log(e);
-	}
-	evt.preventDefault();
-	return false;
-});
-
-//dragging into the window shows the target:
-document.addEventListener('dragover', function(evt){
-	dropTarget.classList.add("active");
-	evt.preventDefault();
-	return false;
-});
-*/
-
- const code = document.getElementById("code1");
- const codeWrapper = document.getElementById("codeWrapper");
- const knitoutCheckbox = document.getElementById("showKnitout");
  function toggleKnitout() {
 	if (knitoutCheckbox.checked) {
 		codeWrapper.style.display = '';
@@ -604,6 +578,42 @@ document.addEventListener('dragover', function(evt){
 	}
  }
  toggleKnitout();
+
+ function toggleWaste() {
+ 	console.log("toggling waste");
+	if (wasteCheckbox.checked) {
+		
+		updateKnitoutMode();
+
+		let code = editor.getValue();
+
+		if (code.indexOf("\r\n") !== -1) {
+			console.log("Converting dos line endings to unix-style (as required by knitout spec).");
+			code = code.replaceAll("\r\n", "\n");
+		}
+
+		if (isKnitout()) {
+			//mark up code with line numbers:
+			knitout = '';
+			code.split('\n').forEach(function(line, lineNumber){
+				knitout += line;
+				if (line.indexOf(';') === -1) {
+					knitout += ';!source:' + (lineNumber+1);
+				}
+				knitout += '\n';
+			});
+		} else {
+			knitout = evalJS(code);
+		}
+
+		knitout = addWasteSection(knitout);
+		show.showKnitout.parse(knitout, false, true);
+		console.log('add waste')
+
+	} else {
+		console.log('no waste')
+	}
+ }
 
 function saveKnitout() {
 	// Remove source line comments
@@ -622,7 +632,6 @@ function saveKnitout() {
 
 function saveJavascript(){
 	fileSave(editor.getValue(), "knitoutFile.js");
-
 }
 
 function fileSave(sourceText, fileIdentity) {

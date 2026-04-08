@@ -617,23 +617,23 @@ if(typeof(module) !== 'undefined'){
 
 	let captureConsole = {
 		log: function() {
-			//console.log.apply(console, arguments);
-			let str = '';
-			for (let i = 0; i < arguments.length; ++i) {
-				if (i !== 0) str += ' ';
-				str += '' + arguments[i];
-			}
-			//comment-only lines (e.g. comment header, magic number) get preserved:
-			if (str.match(/^\s*;/)) {
-				consoleContent.push(str);
-			} else {
-				//other lines get comments removed, and ;!source: directive added:
-				let i = str.indexOf(';');
-				if (i !== -1) {
-					str = str.substr(0,i);
-				}
-				consoleContent.push(str + findLineNumber(2));
-			}
+			console.log.apply(console, arguments);
+			// let str = '';
+			// for (let i = 0; i < arguments.length; ++i) {
+			// 	if (i !== 0) str += ' ';
+			// 	str += '' + arguments[i];
+			// }
+			// //comment-only lines (e.g. comment header, magic number) get preserved:
+			// if (str.match(/^\s*;/)) {
+			// 	consoleContent.push(str);
+			// } else {
+			// 	//other lines get comments removed, and ;!source: directive added:
+			// 	let i = str.indexOf(';');
+			// 	if (i !== -1) {
+			// 		str = str.substr(0,i);
+			// 	}
+			// 	consoleContent.push(str + findLineNumber(2));
+			// }
 		},
 		warn: function() { console.warn.apply(console, arguments); },
 		assert: function() { console.assert.apply(console, arguments); },
