@@ -1152,7 +1152,7 @@ CellMachine.prototype.stitch = function CellMachine_stitch(l, t) {
 };
 CellMachine.prototype.rack = function CellMachine_rack(r) {
 	if (typeof(r) !== "number") throw "Racking must be a number.";
-	if (!(Math.floor(r) === r || Math.floor(r) + 0.25 === r)) throw "Racking must be an integer or an integer plus 0.25";
+	if (!(Math.floor(r) === r || Math.floor(r) + 0.5 === r)) throw "Racking must be an integer or an integer plus 0.5";
 	this.racking = r;
 };
 

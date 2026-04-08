@@ -211,7 +211,7 @@ button:active, #fileLabel:active {
 	let max_needle = 100;
 	let rows = 20;
 	let main_carrier = "3";
-	let bind_off = false; // make 'true' to add a bindoff
+	let bind_off = true; // make 'true' to add a bindoff
 
 	k.in(main_carrier);
 
@@ -223,11 +223,11 @@ button:active, #fileLabel:active {
 	if(bind_off){
 	    //bindoff
 	    if(rows % 2 == 0) {
-	        for (let n = max_needle; n > min_needle; --n) {
+	        for (let n = max_needle; n >= min_needle; --n) {
 	        	k.xfer("f" + n, "b" + n);  // front to rear transfer
-	        	k.rack(1.0); // rack 1
+	        	k.rack(-1.0); // rack 1
 	        	k.xfer("b" + n, "f" + (n-1));
-	        	k.rack(0.25);
+	        	k.rack(-0.5);
 	        	k.knit("+", "f" + (n-1), main_carrier);
 	        	k.rack(0.0);
 	        }
@@ -238,7 +238,7 @@ button:active, #fileLabel:active {
 	        	k.xfer("f" + n, "b" + n);  // front to rear transfer
 	        	k.rack(1.0); // rack 1
 	        	k.xfer("b" + n, "f" + (n+1));
-	        	k.rack(0.25);
+	        	k.rack(0.5);
 	        	k.knit("+", "f" + (n+1), main_carrier);
 	        	k.rack(0.0);
 	        }
@@ -549,6 +549,10 @@ function saveKCode() {
 		knitout = evalJS(code);
 	}
 
+	if (wasteCheckbox.checked) {
+		knitout = addWasteSection(knitout);
+	}
+
 	convertKnitout(knitout);
 }
 
@@ -607,7 +611,6 @@ function convertKnitout(text) {
  toggleKnitout();
 
 function toggleWaste() {
-	console.log("toggling waste");
 	updateKnitoutMode();
 
 	let code = editor.getValue();

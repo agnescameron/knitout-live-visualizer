@@ -29,7 +29,6 @@ function getInCarriers (file) {
 		let inCarrier = lines[0].split(' ')[1].charAt(0); 
 		lines.shift();
 		inCarriers = [inCarrier];
-		console.log('here, incarrier is', inCarriers)
 		lines.map((ln, idx) => {
 			let info = ln.trim().split(' ');
 			if (info[0] === 'in' && info.length > 1) {
@@ -41,7 +40,6 @@ function getInCarriers (file) {
 				}
 			}
 		});
-		console.log('got incarriers', inCarriers, 'carriers is', carriers)
 		return inCarriers;
 	}
 	else return [];
@@ -281,7 +279,6 @@ function addWasteSection (file) {
 			}
 
 			if (i === 0) {
-				console.log('gets here', n, minN, maxN)
 				if (n < minN || n > maxN) toDrop.push(n);
 			}
 		}
@@ -399,8 +396,6 @@ function addWasteSection (file) {
 		}
 	}
 
-	console.log('todrop is', toDrop)
-
 	// drop any extra needles if width < 20
 	if (toDrop.length) {
 		for (let n = 0; n < toDrop.length; ++n) {
@@ -476,8 +471,6 @@ function addWasteSection (file) {
 			wasteSection.push(`out ${outCarriers[i]}`);
 		}
 	}
-
-	console.log('outcarriers is,', outCarriers)
 
 	let xfers = [];
 

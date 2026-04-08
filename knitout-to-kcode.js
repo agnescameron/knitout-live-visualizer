@@ -1034,6 +1034,7 @@ function knitoutToPasses(knitout, knitoutFile) {
 				throw "ERROR: cannot xfer with carriers (use split).";
 			}
 
+			console.log(n.needle, t.needle, racking)
 			//make sure that 't' and 'n' align reasonably:
 			if (n.isBack() && t.isFront()) {
 				if (n.needle + racking !== t.needle) {
@@ -1553,7 +1554,12 @@ function passesToKCode(headers, passes, kcFile) {
 
 				//set carrier stopping points:
 				if (kpass.direction === DIRECTION_LEFT) {
-					kpass.carrierRight = carrierAt[kpass.carrier];
+					// this is in the wrong place at row 1! now fixed?
+					if (carrierAt[kpass.carrier] < 0) {
+						kpass.carrierRight = pass.maxSlot + slotToNeedle + carrierDistance;
+					}
+					else kpass.carrierRight = carrierAt[kpass.carrier];
+					
 					kpass.carrierLeft = pass.minSlot + slotToNeedle - carrierDistance;
 					if (pass.gripper === GRIPPER_OUT) {
 						//console.log("Carrier: " + JSON.stringify(pass.carriers[0]));
@@ -1656,7 +1662,7 @@ function passesToKCode(headers, passes, kcFile) {
 	out(`// ${kcFile}`); //add name of .kc file as comment in header, since it needs to be changed to 'command.kc' for the machine to read it (so can remember original name)
 
 	let lastRACK = 0.0;
-	kcodePasses.forEach(function(kpass){
+	kcodePasses.forEach(function(kpass, i){
 		//console.log("Doing:", kpass); //DEBUG
 		if ('pauseMessage' in kpass) {
 			out(kpass.pauseMessage);
@@ -1674,6 +1680,7 @@ function passesToKCode(headers, passes, kcFile) {
 		let op = (kpass.direction === DIRECTION_RIGHT ? ">>" : "<<");
 		op += " " + kpass.type;
 		//insert carrier / carriage stopping points:
+		// console.log("assertion", kpass.carriageLeft, kpass.carriageRight, kpass, i)
 		console.assert(kpass.carriageLeft < kpass.carriageRight, "properly ordered carriage stops", kpass);
 		console.assert(kpass.carriageLeft - Math.floor(kpass.carriageLeft) === 0.5, "carriage stop is properly fractional");
 		console.assert(kpass.carriageRight - Math.floor(kpass.carriageRight) === 0.5, "carriage stop is properly fractional");
@@ -1682,7 +1689,7 @@ function passesToKCode(headers, passes, kcFile) {
 		const carriageRight = kpass.carriageRight + 15.5;
 		if ('carrier' in kpass) {
 			op += " " + kpass.carrier;
-			console.assert(kpass.carrierLeft < kpass.carrierRight, "properly ordered carrier stops");
+			console.assert(kpass.carrierLeft < kpass.carrierRight, "properly ordered carrier stops", kpass, i);
 			console.assert(kpass.carrierLeft - Math.floor(kpass.carrierLeft) === 0.5, "carrier stop is properly fractional");
 			console.assert(kpass.carrierRight - Math.floor(kpass.carrierRight) === 0.5, "carrier stop is properly fractional");
 			console.assert(kpass.carriageLeft <= kpass.carrierLeft, "carriage comes before carrier on the left");
