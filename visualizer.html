@@ -223,7 +223,7 @@ button:active, #fileLabel:active {
 	if(bind_off){
 	    //bindoff
 	    if(rows % 2 == 0) {
-	        for (let n = max_needle; n >= min_needle; --n) {
+	        for (let n = max_needle; n > min_needle; --n) {
 	        	k.xfer("f" + n, "b" + n);  // front to rear transfer
 	        	k.rack(-1.0); // rack 1
 	        	k.xfer("b" + n, "f" + (n-1));
