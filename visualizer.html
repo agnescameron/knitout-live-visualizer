@@ -209,31 +209,29 @@ button:active, #fileLabel:active {
 
 	let min_needle = 50;
 	let max_needle = 100;
-	let rows = 20;
+	let rows = 40;
 	let main_carrier = "3";
-	let bind_off = true; // make 'true' to add a bindoff
+	let bind_off = false; // make 'true' to add a bindoff
 
 	k.in(main_carrier);
 
 	for (let r = 0; r < rows; ++r) {
-		for (let n = max_needle; n >= min_needle; --n) k.knit("-", "f" + n, main_carrier);
-		for (let n = min_needle; n <= max_needle; ++n) k.knit("+", "f" + n, main_carrier);
-	}
+	    //even numbered rows knit left to right
+	    if (r%2 == 0) 
+	        {
+	            for (let n = max_needle; n >= min_needle; --n) k.knit("-", "f" + n, main_carrier);
+	        }
+	    
+	    //odd numbered rows knit right to left
+		else 
+		    {
+		        for (let n = min_needle; n <= max_needle; ++n) k.knit("+", "f" + n, main_carrier);
+		    }
+		 }
 
 	if(bind_off){
 	    //bindoff
 	    if(rows % 2 == 0) {
-	        for (let n = max_needle; n > min_needle; --n) {
-	        	k.xfer("f" + n, "b" + n);  // front to rear transfer
-	        	k.rack(-1.0); // rack 1
-	        	k.xfer("b" + n, "f" + (n-1));
-	        	k.rack(-0.5);
-	        	k.knit("+", "f" + (n-1), main_carrier);
-	        	k.rack(0.0);
-	        }
-	    }
-	    
-	    else {
 	        for (let n = min_needle; n < max_needle; ++n) {
 	        	k.xfer("f" + n, "b" + n);  // front to rear transfer
 	        	k.rack(1.0); // rack 1
@@ -243,9 +241,21 @@ button:active, #fileLabel:active {
 	        	k.rack(0.0);
 	        }
 	    }
+	    
+	    else {
+	        for (let n = max_needle; n > min_needle; --n) {
+	        	k.xfer("f" + n, "b" + n);  // front to rear transfer
+	        	k.rack(-1.0); // rack 1
+	        	k.xfer("b" + n, "f" + (n-1));
+	        	k.rack(-0.5);
+	        	k.knit("+", "f" + (n-1), main_carrier);
+	        	k.rack(0.0);
+	        }
+	    }
 	}
 
 	k.out("3");
+
 
 </div>
 </div>
