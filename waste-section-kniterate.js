@@ -477,6 +477,8 @@ function addWasteSection (file) {
 		}
 	}
 
+	console.log('outcarriers is,', outCarriers)
+
 	let xfers = [];
 
 	if (castonDir === "-"){

@@ -199,26 +199,53 @@ button:active, #fileLabel:active {
 <div id="editor-text">//this is javascript code that prints out knitout
 // (you can also just write raw knitout into this window)
 
-const knitout = require('knitout');
+	const knitout = require('knitout');
 
-// need this line for kniterate
-let k = new knitout.Writer({carriers:["1", "2", "3", "4", "5", "6"]});
+	// need this line for kniterate
+	let k = new knitout.Writer({carriers:["1", "2", "3", "4", "5", "6"]});
 
-// sample width = max_needle - min_needle
-// sample width should be >20!
+	// sample width = max_needle - min_needle
+	// sample width should be >20!
 
-let min_needle = 50;
-let max_needle = 100;
-let rows = 20;
+	let min_needle = 50;
+	let max_needle = 100;
+	let rows = 20;
+	let main_carrier = "3";
+	let bind_off = false; // make 'true' to add a bindoff
 
-k.in("3");
+	k.in(main_carrier);
 
-for (let r = 0; r < rows; ++r) {
-	for (let n = max_needle; n >= min_needle; --n) k.knit("-", "f" + n, "3");
-	for (let n = min_needle; n <= max_needle; ++n) k.knit("+", "f" + n, "3");
-}
+	for (let r = 0; r < rows; ++r) {
+		for (let n = max_needle; n >= min_needle; --n) k.knit("-", "f" + n, main_carrier);
+		for (let n = min_needle; n <= max_needle; ++n) k.knit("+", "f" + n, main_carrier);
+	}
 
-k.out("3");
+	if(bind_off){
+	    //bindoff
+	    if(rows % 2 == 0) {
+	        for (let n = max_needle; n > min_needle; --n) {
+	        	k.xfer("f" + n, "b" + n);  // front to rear transfer
+	        	k.rack(1.0); // rack 1
+	        	k.xfer("b" + n, "f" + (n-1));
+	        	k.rack(0.25);
+	        	k.knit("+", "f" + (n-1), main_carrier);
+	        	k.rack(0.0);
+	        }
+	    }
+	    
+	    else {
+	        for (let n = min_needle; n < max_needle; ++n) {
+	        	k.xfer("f" + n, "b" + n);  // front to rear transfer
+	        	k.rack(1.0); // rack 1
+	        	k.xfer("b" + n, "f" + (n+1));
+	        	k.rack(0.25);
+	        	k.knit("+", "f" + (n+1), main_carrier);
+	        	k.rack(0.0);
+	        }
+	    }
+	}
+
+	k.out("3");
 
 </div>
 </div>

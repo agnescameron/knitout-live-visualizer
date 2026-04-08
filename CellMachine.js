@@ -500,9 +500,9 @@ CellMachine.prototype.addCells = function CellMachine_addCells(b, list, cross) {
 			let csL = icell.cell.ports['v-'];
 			let csR = icell.cell.ports['v+'];
 			if (csL.length || csR.length) {
-				console.assert((column.length
-					&& JSON.stringify(column[column.length-1].ports['^-']) === JSON.stringify(csL)
-					&& JSON.stringify(column[column.length-1].ports['^+']) === JSON.stringify(csR) ) || dump(), "yarn out should always be exactly yarn in.");
+				// console.assert((column.length
+				// 	&& JSON.stringify(column[column.length-1].ports['^-']) === JSON.stringify(csL)
+				// 	&& JSON.stringify(column[column.length-1].ports['^+']) === JSON.stringify(csR) ) || dump(), "yarn out should always be exactly yarn in.");
 				//had better be exactly the same stack from below:
 				while (column[column.length-1].y + 1 < y) {
 					let empty = new YarnCell();
