@@ -362,12 +362,9 @@ function toggleWaste() {
 	if (wasteCheckbox.checked) {
 		knitout = addWasteSection(knitout);
 		show.showKnitout.parse(knitout, false, true);
-		console.log('add waste')
 
 	} else {
-		console.log('no waste')
 		show.showKnitout.parse(knitout, false, true);
-		console.log('add waste')
 	}
  }
 
