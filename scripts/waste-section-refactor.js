@@ -10,6 +10,8 @@ let defaultCastonStyle = 2; castonCarrier = 3;// open tube
 let rollerAdvance, stitchNumber, speedNumber;
 let wasteCarrier, drawCarrier;
 let castonStyle;
+const wastePasses = 51;
+const tubeRows = 5;
 
 let minN, maxN, wasteMin, wasteMax;
 
@@ -23,6 +25,23 @@ let minN, maxN, wasteMin, wasteMax;
 //		position: [L, R] 
 //	},
 
+class WasteSection {
+	constructor(carrierSet) {
+		this.carrierSet = carrierSet;
+		this.lines = [];
+	}
+
+	push(line, id) {
+	this.lines.push(line);
+	if (id) {
+		const info = line.trim().split(' ');
+		const dir = info[1];
+		if (dir === '+' || dir === '-') {
+			this.carrierSet.setPosition(id, dir === '+' ? 'R' : 'L');
+			}
+		}
+	}
+}
 
 class CarrierSet {
 	// position is always L at the start
@@ -33,7 +52,7 @@ class CarrierSet {
 
 	// roles -- need to know cast-on drawthread etc.
 	// if there are duplicates here, need to change mode
-	get castOn()     { return this.carriers.find(c => c.role === "castOn");}
+	get castOn()     { return this.carriers.find(c => c.castOn);}
 	get drawThread() { return this.carriers.find(c => c.role === "drawThread");}
 	get waste()      { return this.carriers.find(c => c.role === "waste");}
 	get mainYarns()  { return this.carriers.filter(c => c.isMainYarn);}
@@ -43,7 +62,9 @@ class CarrierSet {
 
 	// set the position (happens every row)
 	setPosition(id, side) {
-		this.carriers.find(c => c.id === id).position = side;
+		const carrier = this.carriers.find(c => c.id === id);
+		if (!carrier) throw new Error(`Carrier ${id} not found`);
+		carrier.position = side;
 	}
 
 	// set the direction they get introduced
@@ -143,25 +164,26 @@ function parseMainYarns(lines) {
 		lines.shift();
 
 		lines.forEach((ln, idx) => {
-		const info = ln.trim().split(' ');
+			const info = removeComment(ln).trim().split(' ');
 
-		// Carrier introduced with 'in' command
-		if (info[0] === 'in' && info.length > 1) {
-			const id = info[1].charAt(0);
-			if (!carriers.get(id)) {
-			carriers.push({ id, role: null, castOn: false, isMainYarn: true });
-			lines.splice(idx, 1);
+			// Carrier introduced with 'in' command
+			if (info[0] === 'in' && info.length > 1) {
+				console.log('in in')
+				const id = info[1].charAt(0);
+				if (!carriers.get(id)) {
+				carriers.push({ id, role: null, castOn: false, isMainYarn: true });
+				lines.splice(idx, 1);
+				}
 			}
-		}
 
-		// First stitch for this carrier — capture direction
-		if (info.length > 2 && !info[0].includes(';')) {
-			const id = info[info.length - 1];
-			const carrier = carriers.get(id);
-			if (carrier && !carrier.dir) {
-				carriers.setDir(id, info[1]); // "+" or "-"
+			// First stitch for this carrier — capture direction
+			if (info.length > 2 && !info[0].includes(';')) {
+				const id = info[info.length - 1];
+				const carrier = carriers.get(id);
+				if (carrier && !carrier.dir) {
+					carriers.setDir(id, info[1]); // "+" or "-"
+				}
 			}
-		}
 	  });
 	}
 	return carriers;
@@ -196,10 +218,13 @@ function generateTransfers(carrierSet) {
 }
 
 
-function generateWasteSection(carrierSet) {
-	let wasteSection = []
+function generateWasteSection(carrierSet, toDrop) {
+	let wasteSection = new WasteSection(carrierSet);
+
+	// INITIALISE
+	// initialise the yarns with a tuck
 	wasteSection.push(`;initialize yarns`);
-	console.log(carrierSet.carriers)
+
 	carrierSet.carriers.forEach( (carrier, i) => {
 		wasteSection.push(`in ${carrier.id}`);
 		let bed = 'f';
@@ -207,31 +232,157 @@ function generateWasteSection(carrierSet) {
 		// tuck each carrier in turn
 		for (let n = wasteMin; n <= wasteMax; ++n) {
 			if (Math.abs(n) % carrierSet.carriers.length === i) {
-				wasteSection.push(`tuck + ${bed}${n} ${carrier.id}`);
+				wasteSection.push(`tuck + ${bed}${n} ${carrier.id}`, carrier.id);
 				bed === 'f' ? bed = 'b' : bed = 'f';
 			} 
 
 			else {
-				if (n === wasteMax) wasteSection.push(`miss + ${bed}${n} ${carrier.id}`);
-			}
-
-			if (i === 0) {
-				if (n < minN || n > maxN) toDrop.push(n);
+				if (n === wasteMax) wasteSection.push(`miss + ${bed}${n} ${carrier.id}`, carrier.id);
 			}
 		}
 
 		bed = 'b';
 		for (let n = wasteMax; n >= wasteMin; --n) {
 			if (Math.abs(n) % carrierSet.carriers.length === i) {
-				wasteSection.push(`tuck - ${bed}${n} ${carrier.id}`);
+				wasteSection.push(`tuck - ${bed}${n} ${carrier.id}`, carrier.id);
 				bed === 'f' ? bed = 'b' : bed = 'f';
 			} else {
-				if (n === wasteMin) wasteSection.push(`miss - ${bed}${n} ${carrier.id}`);
+				if (n === wasteMin) wasteSection.push(`miss - ${bed}${n} ${carrier.id}`, carrier.id);
 			}
 		}
+		// console.log("carrier position:", carrier.id, carrier.position);
 	})
 
-	return wasteSection;
+	// WASTE YARN INTERLOCK
+	// knit wastePasses rows of the waste yarn. carrier ends
+	// wastePasses should always be odd in Mode A
+	wasteSection.push(`;waste yarn section`);
+	for (let p = 0; p < wastePasses; ++p) {
+
+		// even numbered rows in +ve direction
+		if (p % 2 === 0) {
+			for (let n = wasteMin; n <= wasteMax; ++n) {
+				if (n % 2 === 0) {
+					wasteSection.push(`knit + f${n} ${wasteCarrier}`, wasteCarrier);
+				} else {
+					wasteSection.push(`knit + b${n} ${wasteCarrier}`, wasteCarrier);
+				}
+			}
+		} 
+
+		// odd numbered rows in -ve direction
+		else {
+			for (let n = wasteMax; n >= wasteMin; --n) {
+				if (n % 2 === 0) {
+					wasteSection.push(`knit - b${n} ${wasteCarrier}`, wasteCarrier);
+				} else {
+					wasteSection.push(`knit - f${n} ${wasteCarrier}`, wasteCarrier);
+				}
+			}
+		}
+	}
+
+	// BRING IN DRAW THREAD
+	// knit 1 row of draw thread, from L to R
+	for (let n = wasteMin; n <= wasteMax; ++n) {
+		if (n % 2 === 0) {
+			wasteSection.push(`knit + b${n} ${drawCarrier}`, drawCarrier);
+		} else {
+			wasteSection.push(`knit + f${n} ${drawCarrier}`, drawCarrier);
+		}
+	}
+
+	// BRING IN EACH MAIN YARN
+	// knit one or two depending on direction
+	// cast on direction needs to be opposite
+	// need to keep track of rows from here
+	let rowCount = 0;
+	carrierSet.mainYarns.forEach(carrier => 
+		{
+			rows = 2; // default
+
+			if (carrier.castOn && carrier.dir === '+') rows = 1;
+			if (!carrier.castOn && carrier.dir === '-') rows = 1;
+
+			// always do 1 row
+			for(i=0; i<rows; i++) {
+				if (rowCount % 2 === 0) {
+					for (let n = wasteMin; n <= wasteMax; ++n) {
+						if (n % 2 === 0) {
+							wasteSection.push(`knit + f${n} ${carrier.id}`, carrier.id);
+						} else {
+							wasteSection.push(`knit + b${n} ${carrier.id}`, carrier.id);
+						}
+					}
+				} 
+				// odd numbered rows in -ve direction
+				else {
+					for (let n = wasteMax; n >= wasteMin; --n) {
+						if (n % 2 === 0) {
+							wasteSection.push(`knit - b${n} ${carrier.id}`, carrier.id);
+						} else {
+							wasteSection.push(`knit - f${n} ${carrier.id}`, carrier.id);
+						}
+					}
+				}
+
+				rowCount += 1;
+			}
+		})
+
+
+	// TUBE
+	// needs to drop out on LHS
+	for (let p = 0; p < tubeRows; ++p) {
+		if(p % 2 === 0){
+			for (let n = wasteMax; n >= wasteMin; --n) {
+				wasteSection.push(`knit - b${n} ${wasteCarrier}`, wasteCarrier);
+			}
+		} else {
+			for (let n = wasteMin; n <= wasteMax; ++n) {
+				wasteSection.push(`knit + f${n} ${wasteCarrier}`, wasteCarrier);
+			}
+		}
+	}
+
+	// drop any extra needles if width < 20
+	if (toDrop.length) {
+		for (let n = 0; n < toDrop.length; ++n) {
+			wasteSection.push(`drop f${toDrop[n]}`);
+		}
+	}
+
+	// drop all needles on back bed
+	for (let n = wasteMin; n <= wasteMax; ++n) {
+		wasteSection.push(`drop b${n}`);
+	}
+
+	// draw thread -- always R-L
+	wasteSection.push(`;draw thread`);
+	for (let n = maxN; n >= minN; --n) {
+		wasteSection.push(`knit - f${n} ${drawCarrier}`);
+	}
+
+	// cast on both beds
+	if (carrierSet.castOn.dir === '-') {
+		wasteSection.push('rack 0.5');
+		for (let n = minN; n <= maxN; ++n) {
+			wasteSection.push(`knit + f${n} ${carrierSet.castOn.id}`, carrierSet.castOn.id);
+			wasteSection.push(`knit + b${n} ${carrierSet.castOn.id}`, carrierSet.castOn.id);
+		}
+	} 
+
+	else {
+		wasteSection.push('rack -0.5');
+		for (let n = maxN; n >= minN; --n) {
+			wasteSection.push(`knit - f${n} ${carrierSet.castOn.id}`, carrierSet.castOn.id);
+			wasteSection.push(`knit - b${n} ${carrierSet.castOn.id}`, carrierSet.castOn.id);
+		}
+	}
+
+	wasteSection.push(`rack 0`);
+
+	return wasteSection.lines;
 }
 
 function addWasteSection (file) {
@@ -265,6 +416,13 @@ function addWasteSection (file) {
 
 	// get the width of the sample
 	[minN, maxN, wasteMin, wasteMax] = findMinMax(lines);
+
+
+	// check if you need to drop any waste section
+	let toDrop = [];
+	for (let n = wasteMin; n <= wasteMax; ++n) {
+		if (n < minN || n > maxN) toDrop.push(n);
+	}
 
 	// get in carriers and caston carrier
 	let carrierSet = parseMainYarns(lines);
@@ -305,7 +463,7 @@ function addWasteSection (file) {
 		})
 	}
 
-	const waste = generateWasteSection(carrierSet);
+	const waste = generateWasteSection(carrierSet, toDrop);
 	console.log(waste);
 	const xfers = generateTransfers(carrierSet);
 
