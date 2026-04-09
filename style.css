@@ -1,0 +1,167 @@
+code.knitout {
+	display:block;
+	height:10em;
+	overflow:auto;
+	background:#eee;
+	border-radius:5px;
+}
+#dropTarget {
+	position:fixed;
+	left:0;
+	bottom:0;
+	width:100%;
+	height:100%;
+
+	background:#ccc;
+	outline:4px dashed #eee;
+	outline-offset:-20px;
+	z-index:100;
+	visibility:hidden;
+}
+#dropTarget.active {
+	visibility:visible;
+	background:#eee;
+	outline-color:#ccc;
+}
+#file {
+	display:none;
+}
+
+.knitoutBox {
+	background:yellow;
+}
+
+body {
+	display:flex;
+	flex-flow: column;
+	width:100vw;
+	height:100vh;
+	margin:0;
+	padding:0;
+	overflow:hidden;
+}
+
+#top {
+	width:100vw;
+	height:content-min;
+	margin: 4px;
+	display:flex;
+	flex-flow:row wrap;
+	align-items:center;
+}
+#bottom {
+	width:100vw;
+	flex-grow:1;
+	display:flex;
+	flex-flow: row;
+}
+#visualizer {
+	width:50vw;
+	position:relative;
+}
+#show {
+	width: 100%;
+	height: 100%;
+	position:absolute;
+}
+#editor {
+	flex-grow:1;
+	flex-basis:20vw;
+	display:flex;
+	flex-flow: column;
+}
+#editor-text {
+	width:100%;
+	flex-grow:1;
+}
+
+button, #fileLabel {
+	box-sizing: border-box;
+	cursor:pointer;
+	background-color: #8FCF96;
+	padding: 4px 8px;
+	margin: 0 2px;
+	box-shadow: 0 0 2px 0 rgba(0,0,0,0.2);
+	text-decoration: none;
+	font-family: serif;
+	font-size: 16px;
+	line-height: 1;
+	border-style: solid;
+	border-width: 2px;
+	border-color: #8FCF96;
+}
+
+button:hover, #fileLabel:hover {
+	background-color: #CBF3AB;
+	border-style: solid;
+	border-width: 2px;
+	border-color: #8FCF96;
+}
+
+button:active, #fileLabel:active {
+	background-color: #CBF3ff;
+}
+
+#top span {
+	display:block;
+	margin: 0 8px 0 2px;
+	padding: 0;
+}
+
+#top .infoLink {
+	flex-grow:1;
+	text-align:right
+}
+#top .infoLink + .infoLink {
+	flex-grow:0;
+}
+
+.infoLink {
+	color:#888;
+}
+
+.infoLink a {
+	color:#666;
+}
+
+.infoLink a:hover {
+	color:#444;
+}
+
+
+.highlight {
+	background-color: #ffeeb7;
+}
+
+#codeWrapper {
+	flex-grow:1;
+	flex-basis:20vw;
+	max-width:30em;
+	display:block;
+	margin:0;
+	position:relative;
+}
+#code1 {
+	position: absolute;
+	width:100%; height:100%;
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	background-color: #f3f3f3;
+	overflow: scroll;
+	display:flex;
+	flex-flow: column;
+}
+.lineNumber {
+	color: #888;
+	width: 2.5em;
+	display: inline-block;
+	text-align: right;
+	margin-right: 1em;
+}
+.line {
+	display: inline-block;
+	padding: 0.2em 2em 0.2em 0.5em;
+	width: 100%;
+	box-sizing: border-box;
+}

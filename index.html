@@ -1,1 +1,111 @@
-visualizer.html
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"> 
+	<title>Knitout Visualizer for Kniterate</title>
+	<script src="scripts/knitout-to-kcode.js"></script>
+	<script src="scripts/waste-section-kniterate.js"></script>
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="top">
+	<input id="file" type="file" />
+	<label id="fileLabel" for="file"><span>Load a knitout or js file</span></label>
+	<span id="fileName">(no file loaded)</span>
+	<button id="reload">Reload</button>
+	<button id="compile">Run/Show</button>
+	<button id="save" onclick="saveKnitout();">Save Knitout</button>
+	<button id="save" onclick="saveJavascript();">Save Javascript</button>
+	<label for="showKnitout"><input type="checkbox"  name="showKnitout" id="showKnitout" onchange="toggleKnitout()">Show Knitout</label>
+	<label for="wasteCheckbox"><input type="checkbox"  name="addWaste" id="wasteCheckbox" onchange="toggleWaste()">Add Waste Section</label>
+	<span class="infoLink"><a href="https://github.com/agnescameron/knitout-live-visualizer" target="_blank">github page</a>;</span>
+</div>
+
+<div id="bottom">
+
+
+<div id="editor">
+	<div id="editor-text">
+		//this is javascript code that prints out knitout
+		const knitout = require('knitout');
+
+		// need this line for kniterate
+		let k = new knitout.Writer({carriers:["1", "2", "3", "4", "5", "6"]});
+
+		// sample width = max_needle - min_needle
+		// sample width should be >20!
+
+		let min_needle = 50;
+		let max_needle = 100;
+		let rows = 40;
+		let main_carrier = "3";
+		let bind_off = false; // make 'true' to add a bindoff
+
+		k.in(main_carrier);
+
+		for (let r = 0; r < rows; ++r) {
+		    //even numbered rows knit left to right
+		    if (r%2 == 0) 
+		        {
+		            for (let n = max_needle; n >= min_needle; --n) k.knit("-", "f" + n, main_carrier);
+		        }
+		    
+		    //odd numbered rows knit right to left
+			else 
+			    {
+			        for (let n = min_needle; n <= max_needle; ++n) k.knit("+", "f" + n, main_carrier);
+			    }
+			 }
+
+		if(bind_off){
+		    //bindoff
+		    if(rows % 2 == 0) {
+		        for (let n = min_needle; n < max_needle; ++n) {
+		        	k.xfer("f" + n, "b" + n);  // front to rear transfer
+		        	k.rack(1.0); // rack 1
+		        	k.xfer("b" + n, "f" + (n+1));
+		        	k.rack(0.5);
+		        	k.knit("+", "f" + (n+1), main_carrier);
+		        	k.rack(0.0);
+		        }
+		    }
+		    
+		    else {
+		        for (let n = max_needle; n > min_needle; --n) {
+		        	k.xfer("f" + n, "b" + n);  // front to rear transfer
+		        	k.rack(-1.0); // rack 1
+		        	k.xfer("b" + n, "f" + (n-1));
+		        	k.rack(-0.5);
+		        	k.knit("+", "f" + (n-1), main_carrier);
+		        	k.rack(0.0);
+		        }
+		    }
+		}
+
+		k.out("3");
+	</div>
+</div>
+
+<pre id="codeWrapper" style="display:none;">
+	<code id="code1">
+	</code>
+</pre>
+
+<div id="visualizer">
+	<canvas class="ShowKnitout" id="show"></canvas>
+	</div>
+	<button id="resetZoom" style="position: absolute; bottom: 0em; right: 0em;">Reset Zoom</button>
+</div>
+
+<div id="dropTarget"></div>
+
+<script src="scripts/parseKnitout.js"></script>
+<script src="scripts/CellMachine.js"></script>
+<script src="scripts/VectorTilesLib.js"></script>
+<script src="scripts/VectorTiles.js"></script>
+<script src="scripts/evalJS.js"></script>
+<script src="scripts/show-knitout.js"></script>
+<script src="./ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="scripts/visualizer.js"></script>
+
+</body>
