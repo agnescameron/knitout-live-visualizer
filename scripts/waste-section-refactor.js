@@ -158,7 +158,6 @@ function parseMainYarns(lines) {
 	const carriers = new CarrierSet([]);
 	if (lines.length > 0) {
 		// First line is always the cast-on
-		console.log(lines[0])
 		const castOnId = lines[0].split(' ')[1].charAt(0);
 		carriers.push({ id: castOnId, role: null, castOn: true, isMainYarn: true });
 		lines.shift();
@@ -168,7 +167,6 @@ function parseMainYarns(lines) {
 
 			// Carrier introduced with 'in' command
 			if (info[0] === 'in' && info.length > 1) {
-				console.log('in in')
 				const id = info[1].charAt(0);
 				if (!carriers.get(id)) {
 				carriers.push({ id, role: null, castOn: false, isMainYarn: true });
@@ -189,32 +187,26 @@ function parseMainYarns(lines) {
 	return carriers;
 }
 
-// need a function that decides the mode based on if
-// there are waste and draw threads in the in-carriers
-function setMode(inCarriers, drawCarrier, ) {
-
-}
-
-function makeCarriers({ castOn, drawThread, waste, mainYarns }) {
-	const state = {};
-	const allEntries = [castOn, drawThread, waste, ...mainYarns];
-	for (const c of allEntries) state[c.id] = { 
-		dir: c.dir, 
-		endsAt: c.endsAt, 
-		reusedInSample: c.reusedInSample ?? false };
-		return new CarrierSet(
-			{
-				castOn: castOn.id, 
-				drawThread: drawThread.id, 
-				waste: waste.id, 
-				mainYarnIds: mainYarns
-			},
-			state
-		);
-}
 
 function generateTransfers(carrierSet) {
-	return [];
+	let xfers = [];
+
+	// transfers R->L, ending up at L
+	if (carrierSet.castOn.dir === "+"){
+		for (let n = minN; n <= maxN; ++n) {
+			xfers.push("xfer b" + n + " f"+n);
+		}
+	}
+
+	// transfers L->R, ending up at R
+	else {
+		for (let n = maxN; n >= minN; --n) {
+			xfers.push("xfer b" + n + " f"+n);
+		}
+	}
+
+	return xfers;
+
 }
 
 
@@ -231,26 +223,22 @@ function generateWasteSection(carrierSet, toDrop) {
 
 		// tuck each carrier in turn
 		for (let n = wasteMin; n <= wasteMax; ++n) {
+			const bed = (Math.abs(n) + i) % 2 === 0 ? 'f' : 'b';
 			if (Math.abs(n) % carrierSet.carriers.length === i) {
 				wasteSection.push(`tuck + ${bed}${n} ${carrier.id}`, carrier.id);
-				bed === 'f' ? bed = 'b' : bed = 'f';
-			} 
-
-			else {
-				if (n === wasteMax) wasteSection.push(`miss + ${bed}${n} ${carrier.id}`, carrier.id);
+			} else if (n === wasteMax) {
+				wasteSection.push(`miss + ${bed}${n} ${carrier.id}`, carrier.id);
 			}
 		}
 
-		bed = 'b';
 		for (let n = wasteMax; n >= wasteMin; --n) {
+			const bed = (Math.abs(n) + i) % 2 === 0 ? 'b' : 'f' ;
 			if (Math.abs(n) % carrierSet.carriers.length === i) {
 				wasteSection.push(`tuck - ${bed}${n} ${carrier.id}`, carrier.id);
-				bed === 'f' ? bed = 'b' : bed = 'f';
-			} else {
-				if (n === wasteMin) wasteSection.push(`miss - ${bed}${n} ${carrier.id}`, carrier.id);
+			} else if (n === wasteMin) {
+				wasteSection.push(`miss - ${bed}${n} ${carrier.id}`, carrier.id);
 			}
 		}
-		// console.log("carrier position:", carrier.id, carrier.position);
 	})
 
 	// WASTE YARN INTERLOCK
@@ -428,11 +416,32 @@ function addWasteSection (file) {
 	let carrierSet = parseMainYarns(lines);
 	
 	// now add in drawthread and waste yarn
-	// check if they match
+
+	// check waste carrier is not in main yarns
+	// don't want waste last as subtle bug if it's the first one tucked
+	if(carrierSet.carriers.some(c => c.id === wasteCarrier)){
+		window.alert(`main carriers can't be the same as waste yarn (${wasteCarrier})`)
+		// right now draw and waste can't match- 
+		//but could set a check for this in future
+		carrierSet.setRole(wasteCarrier, "waste");
+
+		mode = "B"; // waste thread included in main yarns
+	}
+	else {
+		carrierSet.push({ 
+			id: wasteCarrier, 
+			role: "waste", 
+			isMainYarn: false, 
+			dir: "+"
+		})
+	}
+
+	// check draw thread not in main yarns
 	if(carrierSet.carriers.some(c => c.id === drawCarrier)){
 		window.alert(`main carriers can't be the same as draw thread (${drawCarrier})`)
 		carrierSet.setRole(drawCarrier, "draw");
-		mode = "B"; // draw thread included in main yarns
+		if (mode === "B") mode = "D" // both
+		else mode = "C" // draw thread included in main yarns
 	}
 
 	else {
@@ -444,27 +453,7 @@ function addWasteSection (file) {
 		})
 	}
 
-	// check waste carrier
-	if(carrierSet.carriers.some(c => c.id === wasteCarrier)){
-		window.alert(`main carriers can't be the same as waste yarn (${wasteCarrier})`)
-		// right now draw and waste can't match- 
-		//but could set a check for this in future
-		carrierSet.setRole(wasteCarrier, "waste");
-
-		if (mode === "B") mode = "D" // both
-		else mode = "C" // waste thread included in main yarns
-	}
-	else {
-		carrierSet.push({ 
-			id: wasteCarrier, 
-			role: "waste", 
-			isMainYarn: false, 
-			dir: "+"
-		})
-	}
-
 	const waste = generateWasteSection(carrierSet, toDrop);
-	console.log(waste);
 	const xfers = generateTransfers(carrierSet);
 
 	lines = [...headers, ...waste, ...xfers, ...lines];
