@@ -11,19 +11,18 @@
 <div id="top">
 	<input id="file" type="file" />
 	<label id="fileLabel" for="file"><span>Load a knitout or js file</span></label>
-	<span id="fileName">(no file loaded)</span>
+	<span id="fileName">(editor)</span>
 	<button id="reload">Reload</button>
 	<button id="compile">Run/Show</button>
-	<button id="save" onclick="saveKnitout();">Save Knitout</button>
-	<button id="save" onclick="saveJavascript();">Save Javascript</button>
-	<label for="showKnitout"><input type="checkbox"  name="showKnitout" id="showKnitout" onchange="toggleKnitout()">Show Knitout</label>
-	<label for="wasteCheckbox"><input type="checkbox"  name="addWaste" id="wasteCheckbox" onchange="toggleWaste()">Add Waste Section</label>
-	<span class="infoLink"><a href="https://github.com/agnescameron/knitout-live-visualizer" target="_blank">github page</a>;</span>
+	<button id="save" onclick="saveKCode();">Save KCode</button>
+	<button id="save" onclick="saveJavascript();">Save JS</button>
+	<span class="checkbox"><label for="showKnitout"><input type="checkbox"  name="showKnitout" id="showKnitout" onchange="toggleKnitout()">Show Knitout</label></span>
+	<span class="checkbox"><label for="wasteCheckbox"><input type="checkbox"  name="addWaste" id="wasteCheckbox" onchange="toggleWaste()">Add Waste Section</label></span>
+	<span class="infoLink"><a href="https://github.com/agnescameron/knitout-live-visualizer" target="_blank">how to use</a></span>
+	<span class="infoLink"><a href="https://github.com/agnescameron/knitout-live-visualizer" target="_blank">github page</a></span>
 </div>
 
 <div id="bottom">
-
-
 <div id="editor">
 	<div id="editor-text">
 		//this is javascript code that prints out knitout

@@ -1,3 +1,7 @@
+body {
+	font-family: helvetica;
+}
+
 code.knitout {
 	display:block;
 	height:10em;
@@ -75,27 +79,28 @@ body {
 	flex-grow:1;
 }
 
+.checkbox {
+	margin-left: 10px;
+}
+
 button, #fileLabel {
 	box-sizing: border-box;
 	cursor:pointer;
-	background-color: #8FCF96;
+	background-color: lightblue;
 	padding: 4px 8px;
 	margin: 0 2px;
 	box-shadow: 0 0 2px 0 rgba(0,0,0,0.2);
 	text-decoration: none;
-	font-family: serif;
 	font-size: 16px;
 	line-height: 1;
 	border-style: solid;
-	border-width: 2px;
-	border-color: #8FCF96;
+	border-width: 1px;
+	border-color: black;
 }
 
 button:hover, #fileLabel:hover {
-	background-color: #CBF3AB;
+	background-color: white;
 	border-style: solid;
-	border-width: 2px;
-	border-color: #8FCF96;
 }
 
 button:active, #fileLabel:active {
