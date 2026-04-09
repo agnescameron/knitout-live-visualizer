@@ -214,7 +214,7 @@ function addWasteSection (file) {
 
 	console.log(castonDir)
 	if (castonDir === '-' && castonCarrier !== wasteCarrier && castonCarrier !== drawCarrier) {
-		negCarriers.push(castonCarrier);
+		inCarriers.forEach(inCarrier => negCarriers.push(inCarrier));
 	}
 
 	if (lines && otherCarriers.length) {
@@ -242,6 +242,7 @@ function addWasteSection (file) {
 		wasteMin = minN;
 		wasteMax = maxN;
 	}
+	
 	let toDrop = [];
 
 
@@ -335,14 +336,17 @@ function addWasteSection (file) {
 	}
 
 
-	// bring in the cast-on carrier
-	for (let n = wasteMax; n >= wasteMin; --n) {
-		if (n % 2 === 0) {
-			wasteSection.push(`knit - b${n} ${castonCarrier}`);
-		} else {
-			wasteSection.push(`knit - f${n} ${castonCarrier}`);
+	// bring in the yarns that you're knitting with
+	inCarriers.forEach(inCarrier => {
+		console.log('knitting in carriers')
+		for (let n = wasteMax; n >= wasteMin; --n) {
+			if (n % 2 === 0) {
+				wasteSection.push(`knit - b${n} ${inCarrier}`);
+			} else {
+				wasteSection.push(`knit - f${n} ${inCarrier}`);
+			}
 		}
-	}
+	})
 
 	// 5 rows of alternating front/back
 	// nb -- rev direction after drawthread intro
@@ -446,7 +450,7 @@ function addWasteSection (file) {
 			wasteSection.push(`rack 0`);
 		} else {
 			wasteSection.push('rack 0.5'); // or 0.5 ? (visualizer)
-			if (castonDir === '-') { // ??
+			if (castonDir === '-') { 
 				for (let n = minN; n <= maxN; ++n) {
 					wasteSection.push(`knit + f${n} ${castonCarrier}`, `knit + b${n} ${castonCarrier}`);
 				}
@@ -474,17 +478,36 @@ function addWasteSection (file) {
 
 	let xfers = [];
 
-	if (castonDir === "-"){
+	if (castonDir === "+"){
 		for (let n = minN; n <= maxN; ++n) {
 			xfers.push("xfer b"+n + " f"+n);
+		}
+		for (let n = maxN; n >= minN; --n) {
+			xfers.push(`knit - f${n} ${castonCarrier}`);
 		}
 	}
 
 	else {
+		console.log('-ve cast on')
 		for (let n = maxN; n >= minN; --n) {
 			xfers.push("xfer b" + n + " f"+n);
 		}
+
+		for (let n = maxN; n >= minN; --n) {
+			xfers.push(`knit - f${n} ${castonCarrier}`);
+		}
 	}
+
+	// if (castonDir === '-') { 
+	// // add 1 row of knit 
+
+
+	// } 
+	// else {
+	// 	// add 1 row of knit 
+
+
+	// }
 
 	lines = [...header, ...wasteSection, ...xfers, ...lines];
 
