@@ -179,17 +179,32 @@ updateVisualizer(true);
 let compile = document.getElementById("compile");
 compile.addEventListener('click', function() { updateVisualizer(false); } );
 
-let reload = document.getElementById("reload");
+// let reload = document.getElementById("reload");
+// let currentSource = null; //{file:file} or {url:url} or null
+// reload.addEventListener('click', function() {
+// 	if (currentSource) {
+// 		if (currentSource.file) {
+// 			readFile(currentSource.file);
+// 		} else if (currentSource.url) {
+// 			readURL(currentSource.url);
+// 		}
+// 	}
+// });
+
+var file = document.getElementById("file");
 let currentSource = null; //{file:file} or {url:url} or null
-reload.addEventListener('click', function() {
-	if (currentSource) {
-		if (currentSource.file) {
-			readFile(currentSource.file);
-		} else if (currentSource.url) {
-			readURL(currentSource.url);
-		}
+file.addEventListener('change', function(evt){
+	console.log('getting file')
+	try {
+		readFile(file.files[0]);
+		file.value = "";
+	} catch (e) {
+		console.log(e);
 	}
+	evt.preventDefault();
+	return false;
 });
+
 
 
 function setSource(source, text) {
@@ -399,19 +414,6 @@ function fileSave(sourceText, fileIdentity) {
 		document.body.removeChild(workElement);
 	} else throw 'File saving not supported for this browser';
 }
-
-
-var file = document.getElementById("file");
-file.addEventListener('change', function(evt){
-	try {
-		readFile(file.files[0]);
-		file.value = "";
-	} catch (e) {
-		console.log(e);
-	}
-	evt.preventDefault();
-	return false;
-});
 
 
 { //check for '?load=....' in the URL:
